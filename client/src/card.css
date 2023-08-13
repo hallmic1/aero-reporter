@@ -1,0 +1,55 @@
+body {
+  background-color: #393646;
+  color: #F4EEE0;
+}
+.card-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  flex-direction: column;
+  margin: 1rem;
+}
+.card-section {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  flex-direction: row;
+  margin: 1rem;
+}
+.card {
+  min-width: 18rem;
+  width: fit-content;
+  margin: 1rem;
+  padding: 1rem;
+  border: 1px solid #F4EEE0;
+  border-radius: 5px;
+  box-shadow: 2px 2px 5px #4F4557;
+  animation: cardInsert 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
+  background-color: #4F4557;
+}
+.placeholder-text{
+  animation: placeholder-text 4s ease-in-out infinite;
+}
+
+@keyframes cardInsert {
+  0% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes placeholder-text {
+  0% {
+    opacity: 0.50;
+  }
+  50% {
+    opacity: 0.1;
+  }
+  100% {
+    opacity: .50;
+  }
+}
