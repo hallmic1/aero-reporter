@@ -99,7 +99,7 @@ var WebSocketServer = /** @class */ (function () {
 var state = new State();
 var wsServer = new WebSocketServer(wss);
 function init() {
-    fetch('http://192.168.4.59:80').then(function (res) { return res.json(); }).then(function (data) {
+    fetch('http://espgarden.local').then(function (res) { return res.json(); }).then(function (data) {
         if (data) {
             for (var pump in data.pumps) {
                 state.addPump(pump);

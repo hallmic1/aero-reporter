@@ -192,7 +192,7 @@ let state = new State();
 const wsServer = new WebSocketServer(wss);
 
 function init()  {
-    fetch('http://192.168.4.59:80').then(res => res.json()).then((data: fullNetworkResponse) => { //change data type, probably the bug is here
+    fetch('http://espgarden.local').then(res => res.json()).then((data: fullNetworkResponse) => { //change data type, probably the bug is here
         if(data) {
             for(const pump in data.pumps) {
                 state.addPump(pump);
