@@ -3,48 +3,103 @@ import "./card.css"
 import {useEffect, useRef, useState} from "react";
 import Section from "./Section";
 import Alert from "./Alert";
-const WS_URL = 'ws://192.168.4.60:3001';
+const WS_URL = '192.168.4.62:3001';
+const errorCodes = {
+  SERVER_DEAD: "Have you started your server?",
+  ARDUINO_DEAD: "Is your arduino on and connected to the internet?",
+}
 
+async function fetchWithTimeout(resource, options = {}) {
+  const { timeout = 8000 } = options;
+
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
+  const response = await fetch(resource, {
+    ...options,
+    signal: controller.signal
+  });
+  clearTimeout(id);
+
+  return response;
+}
 function App() {
-  function getHealth() {
-    fetch("http://espgarden.local/health").then(res => res.json()).then(data => {
-        console.log(data);
-      setAlert(data.status !== "OK");
-    }).catch(err => {
-      console.log(err);
-      setAlert(true)
-    })
-  }
+
+  const [data, setData] = useState(null);
+  const [alert, setAlert] = useState([]);
   const didUnmount = useRef(false);
-  const {lastMessage} = useWebSocket(WS_URL, {
-    shouldReconnect: (closeEvent) => {
+  const {lastMessage} = useWebSocket(`ws://${WS_URL}`, {
+    shouldReconnect: () => {
       return didUnmount.current === false;
     },
     reconnectAttempts: 10,
+    retryOnError: true,
     reconnectInterval: 3000,
+    onError: () => {
+      if(!alert.includes(errorCodes.SERVER_DEAD)) {
+        setAlert([...alert, errorCodes.SERVER_DEAD]);
+      }
+    },
+    onClose: () => {
+      if(!alert.includes(errorCodes.SERVER_DEAD)) {
+        setAlert([...alert, errorCodes.SERVER_DEAD]);
+      }
+    },
+    onOpen: () => {
+      setAlert(alert.filter(e => e !== errorCodes.SERVER_DEAD));
+    }
   });
   useEffect(() => {
     return () => {
       didUnmount.current = true;
     }
   }, [])
-  const [data, setData] = useState(null);
-  const [alert, setAlert] = useState(false);
+
   useEffect(() => {
     if(!lastMessage) return;
-    console.log(lastMessage.data)
     setData(JSON.parse(lastMessage.data));
   }, [lastMessage]);
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const timer = setInterval(() => {
       getHealth()
     }, 5000);
     return () => clearTimeout(timer)
   }, [])
+  function getHealth() {
+    fetchWithTimeout("http://espgarden.local/health", {timeout: 5000}).then(res => res.json()).then(data => {
+      if(data.status !== "OK") {
+        if(!alert.includes(errorCodes.ARDUINO_DEAD)) {
+          setAlert([...alert, errorCodes.ARDUINO_DEAD]);
+        }
+      } else {
+        setAlert(alert.filter(e => e !== errorCodes.ARDUINO_DEAD));
+      }
+    }).catch(err => {
+      console.log(err);
+      if(!alert.includes(errorCodes.ARDUINO_DEAD)) {
+        setAlert([...alert, errorCodes.ARDUINO_DEAD]);
+      }
+    })
+    fetchWithTimeout(`http://${WS_URL}/health`, {timeout: 5000}).then(res => res.json()).then(data => {
+      if(data.status !== "OK") {
+        if(!alert.includes(errorCodes.SERVER_DEAD)) {
+          setAlert([...alert, errorCodes.SERVER_DEAD]);
+        }
+      } else {
+        setAlert(alert.filter(e => e !== errorCodes.SERVER_DEAD));
+      }
+    }).catch(err => {
+      console.log(err);
+      if(!alert.includes(errorCodes.SERVER_DEAD)) {
+        setAlert([...alert, errorCodes.SERVER_DEAD]);
+      }
+    })
+  }
+
   if(!data) return null;
   return (
     <div className="card-list">
-      <Alert show={alert} message={"Is your arduino on and connected to the internet?"} />
+      <Alert show={alert.length > 0} message={alert.join('\/n')} />
       <Section name="Pumps" list={data.pumps} />
       <Section name="Switches" list={data.switches} />
       <Section name="Peristaltic Pumps" list={data.peristalticPumps} />

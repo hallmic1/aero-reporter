@@ -2,7 +2,6 @@ import './card.css'
 import Card from "./card";
 
 export default function Section({name, list }) {
-  console.log("list", list)
   if(list && list.length > 0) {
     return (
       <>

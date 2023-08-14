@@ -220,6 +220,10 @@ app.get('/peristaltic_pump/stop/:id/:direction', function (req, res) {
     wsServer.sendState();
     res.json(state.getPeristalticPump(req.params.id));
 });
+app.get("/health", function (req, res) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.json({ status: "OK" });
+});
 app.get("*", function (req, res) {
     res.send("Hitting" + req.url);
 });
